@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Debugs the open script using the .venv interpreter (see settings.json).
+      // The .venv's scriptkit is used for debugging; `uv run` remains the way to
+      // run against a script's exact pinned version.
+      "name": "Debug current script (.venv)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

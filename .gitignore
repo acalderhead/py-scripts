@@ -19,5 +19,5 @@ data/
 # OS / editor
 .DS_Store
 Thumbs.db
-.vscode/
 .idea/
+# NOTE: .vscode/ is intentionally committed — it holds the shared run/debug setup.

@@ -1,0 +1,19 @@
+{
+  // Interpreter used for IntelliSense, linting, and debugging. Create it once
+  // with:  uv venv  &&  uv pip install "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.1.0"
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": ["${workspaceFolder}/scripts"],
+
+  // Tests (optional) live in tests/ and import scripts via tests/conftest.py.
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests"],
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": { "source.organizeImports": "explicit" }
+  },
+
+  // Keep files LF to match .gitattributes.
+  "files.eol": "\n"
+}

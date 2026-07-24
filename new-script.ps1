@@ -4,9 +4,10 @@
 
 .DESCRIPTION
     Copies templates/script_template.py from the py-scriptkit source of truth
-    (the local sibling repo if present, otherwise GitHub raw at the given tag),
-    names it, and pins its scriptkit dependency to -Tag. This is the only step
-    needed to start a new script — everything else is inherited from scriptkit.
+    (the local sibling repo if present, otherwise GitHub raw at the given tag)
+    into this repo's scripts/ folder, names it, and pins its scriptkit
+    dependency to -Tag. This is the only step needed to start a new script —
+    the CLI, env wiring, path cascade, and logging are inherited from scriptkit.
 
 .PARAMETER Name
     Name for the new script; punctuation is normalized to snake_case and a .py
@@ -35,7 +36,11 @@ $ErrorActionPreference = "Stop"
 # Normalize to a snake_case .py filename.
 $stem = ($Name -replace '\.py$', '' -replace '[^A-Za-z0-9]+', '_').Trim('_').ToLower()
 if (-not $stem) { throw "Could not derive a filename from '$Name'." }
-$dest = Join-Path (Get-Location) "$stem.py"
+
+# Always write into this repo's scripts/ folder, regardless of current directory.
+$scriptsDir = Join-Path $PSScriptRoot "scripts"
+if (-not (Test-Path $scriptsDir)) { New-Item -ItemType Directory -Path $scriptsDir | Out-Null }
+$dest = Join-Path $scriptsDir "$stem.py"
 if ((Test-Path $dest) -and -not $Force) {
     throw "Refusing to overwrite $dest (pass -Force to replace it)."
 }
@@ -57,5 +62,5 @@ $content = $content -replace 'py-scriptkit\.git@v[0-9]+\.[0-9]+\.[0-9]+', "py-sc
 # Write UTF-8 without BOM so `uv run` / the shebang parse cleanly.
 [System.IO.File]::WriteAllText($dest, $content, (New-Object System.Text.UTF8Encoding($false)))
 
-Write-Host "Created $stem.py (pinned scriptkit@$Tag)"
-Write-Host "Next:  uv run $stem.py --help"
+Write-Host "Created scripts/$stem.py (pinned scriptkit@$Tag)"
+Write-Host "Next:  uv run scripts/$stem.py --help"
