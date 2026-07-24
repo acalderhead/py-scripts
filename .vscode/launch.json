@@ -2,18 +2,25 @@
   "version": "0.2.0",
   "configurations": [
     {
-      // Debugs the open script using whichever interpreter is currently selected
-      // (Python: Select Interpreter). Defaults to .venv313 — see settings.json.
-      "name": "Debug current script (selected interpreter)",
+      // PRIMARY (F5). Header-aware debugging: the preLaunchTask runs the open
+      // script under debugpy via `uv run --with debugpy --script`, so the
+      // PEP 723 header is honored and `[rich]` shows RichLogger exactly as a
+      // real `uv run` would. VS Code attaches once the task prints DEBUGPY_READY.
+      // (Mechanics: .vscode/tasks.json → "debug: uv run current file (3.13)" and
+      // .vscode/debug/sitecustomize.py.)
+      "name": "Debug current script — uv (header-aware)",
       "type": "debugpy",
-      "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}"
+      "request": "attach",
+      "connect": { "host": "127.0.0.1", "port": 5678 },
+      "preLaunchTask": "debug: uv run current file (3.13)",
+      "justMyCode": true
     },
     {
-      // Debug pinned to Python 3.13, regardless of the selected interpreter.
-      "name": "Debug current script (3.13)",
+      // Fallback: debug on the dev venv directly. The venvs carry plain
+      // `scriptkit` (no [rich]), so logging uses the stdlib `[TAG]` fallback
+      // regardless of the script's header. Simple and reliable; use it if the
+      // uv attach above needs tweaking, or when the log style doesn't matter.
+      "name": "Debug current script — venv 3.13 (stdlib)",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
@@ -22,8 +29,7 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      // Debug pinned to Python 3.12.
-      "name": "Debug current script (3.12)",
+      "name": "Debug current script — venv 3.12 (stdlib)",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
@@ -32,8 +38,7 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      // Debug pinned to Python 3.11 (the scripts' requires-python floor).
-      "name": "Debug current script (3.11)",
+      "name": "Debug current script — venv 3.11 (stdlib)",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",

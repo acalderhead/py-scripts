@@ -5,9 +5,17 @@
       // Default build task → Ctrl+Shift+B. Runs the open script with uv on the
       // default Python (3.13), matching the default debug/IntelliSense version.
       // uv still honors the script's PEP 723 pin; --python just fixes the minor.
+      //
+      // --exact makes the header authoritative in BOTH directions. uv caches one
+      // environment per script and, without --exact, only ever *adds* to it: drop
+      // the `[rich]` extra from a header and uv happily reuses the cached env that
+      // still has rich_logger in it, so the script keeps printing decorated output
+      // it no longer asks for (`--refresh` does not fix this — it refreshes
+      // distributions, not env membership). --exact prunes the env to exactly the
+      // header's dependencies, so `[rich]` alone decides the logging backend.
       "label": "uv run: current file (3.13)",
       "type": "shell",
-      "command": "uv run --python 3.13 \"${relativeFile}\"",
+      "command": "uv run --exact --python 3.13 \"${relativeFile}\"",
       "group": { "kind": "build", "isDefault": true },
       "presentation": { "clear": true },
       "problemMatcher": []
@@ -15,7 +23,7 @@
     {
       "label": "uv run: current file (3.12)",
       "type": "shell",
-      "command": "uv run --python 3.12 \"${relativeFile}\"",
+      "command": "uv run --exact --python 3.12 \"${relativeFile}\"",
       "group": "build",
       "presentation": { "clear": true },
       "problemMatcher": []
@@ -23,7 +31,7 @@
     {
       "label": "uv run: current file (3.11)",
       "type": "shell",
-      "command": "uv run --python 3.11 \"${relativeFile}\"",
+      "command": "uv run --exact --python 3.11 \"${relativeFile}\"",
       "group": "build",
       "presentation": { "clear": true },
       "problemMatcher": []
@@ -32,15 +40,48 @@
       // Prompts for arguments (e.g. --name Aidan --times 2), on the default 3.13.
       "label": "uv run: current file (with args)",
       "type": "shell",
-      "command": "uv run --python 3.13 \"${relativeFile}\" ${input:scriptArgs}",
+      "command": "uv run --exact --python 3.13 \"${relativeFile}\" ${input:scriptArgs}",
       "presentation": { "clear": true },
       "problemMatcher": []
     },
     {
       "label": "uv run: current file --help",
       "type": "shell",
-      "command": "uv run --python 3.13 \"${relativeFile}\" --help",
+      "command": "uv run --exact --python 3.13 \"${relativeFile}\" --help",
       "problemMatcher": []
+    },
+    {
+      // Background half of header-aware F5 (see the "Debug current script — uv"
+      // launch config). Runs the open script under debugpy inside the
+      // uv-resolved env that honors its PEP 723 header (so [rich] activates
+      // RichLogger exactly as `uv run` would). .vscode/debug/sitecustomize.py
+      // opens the listener and prints DEBUGPY_READY; the background matcher
+      // below waits for that line, then the launch config attaches.
+      //
+      // --exact prunes the cached script env to the header's dependencies (see the
+      // default build task above for why). It composes with --with: debugpy is part
+      // of this invocation's requirements, so it is installed and kept, while a
+      // stale rich_logger from an earlier `[rich]` header is removed.
+      "label": "debug: uv run current file (3.13)",
+      "type": "shell",
+      "command": "uv run --exact --python 3.13 --with debugpy --script \"${relativeFile}\"",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "DEBUGPY_LISTEN": "127.0.0.1:5678",
+          "PYTHONPATH": "${workspaceFolder}/.vscode/debug",
+          "PYDEVD_DISABLE_FILE_VALIDATION": "1"
+        }
+      },
+      "presentation": { "clear": true, "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "pattern": { "regexp": "^__never_matches__$", "file": 1, "line": 2, "message": 3 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "DEBUGPY_READY"
+        }
+      }
     },
     {
       // Default test task → "Run Test Task". Runs tests/ on the default Python

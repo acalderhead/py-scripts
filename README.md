@@ -16,6 +16,7 @@ py-scripts/
 ├── setup-venvs.ps1    builds the per-version dev venvs (.venv311/312/313)
 ├── ruff.toml          lint / format config
 └── .vscode/           run / debug / test config
+    └── debug/         debugpy bootstrap for header-aware F5 (sitecustomize.py)
 ```
 
 ## One-time setup
@@ -27,12 +28,12 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ```
 
 Create the per-version dev virtualenvs (used by VS Code for IntelliSense,
-linting, and debugging — one per supported Python minor version, each with
-pinned `scriptkit[rich]` (RichLogger) plus dev tools installed):
+linting, and testing — one per supported Python minor version, each with plain
+pinned `scriptkit` plus dev tools installed):
 
 ```powershell
 .\setup-venvs.ps1                 # builds .venv311 / .venv312 / .venv313
-.\setup-venvs.ps1 -Tag v0.2.3     # pin a specific scriptkit into the venvs
+.\setup-venvs.ps1 -Tag v0.2.4     # pin a specific scriptkit into the venvs
 .\setup-venvs.ps1 -Force          # delete and recreate them
 ```
 
@@ -45,12 +46,13 @@ squiggle).
 > ignores these venvs — it reads the `scriptkit` version the script pins in its
 > own PEP 723 header and fetches exactly that, so a run always reflects the
 > script's real dependencies. The dev venvs exist only for the editor:
-> IntelliSense, linting, tests, and F5 debugging. They include the `[rich]`
-> extra, so the Run button and F5 render RichLogger's decorated output. One
-> consequence: the editor always has RichLogger available, so a script whose
-> header does **not** pin `[rich]` still looks decorated in the editor but prints
-> the plain `[TAG]` fallback under `uv run` — which remains the source of truth
-> for what a script really does.
+> IntelliSense, linting, and tests. They carry **plain `scriptkit`** — no `[rich]`
+> extra — deliberately, so they never fake a dependency a script didn't ask for.
+> The trade-off is the reverse of what it used to be: venv-based paths (the ▶ Run
+> button, the "venv (stdlib)" debug configs, pytest) always show the plain `[TAG]`
+> fallback, while every uv-based path renders whatever the header pins. Run
+> through uv — Ctrl+Shift+B or F5 — when you want to see a script's real logging.
+> See [Decorated logs](#decorated-logs-richlogger) for the full matrix.
 
 ## Execution
 
@@ -67,7 +69,7 @@ save**. From there the cycle is scaffold → edit → run → commit:
 # 2. edit scripts/my_tool.py:
 #      - add fields to Settings   -> each becomes a --flag and an APP_* env var
 #      - write main()             -> what the tool actually does
-uv run scripts/my_tool.py --help  # 3. run it; uv fetches the pinned scriptkit on first run
+uv run --exact scripts/my_tool.py --help   # 3. run it; uv fetches the pinned scriptkit on first run
 git add scripts/my_tool.py; git commit -m "add my_tool"; git push   # 4. save it
 ```
 
@@ -81,31 +83,83 @@ Two ways; both honor the script's own `scriptkit` pin because both go through
 
 - **PowerShell:**
   ```powershell
-  uv run scripts/<name>.py [args]
-  uv run scripts/<name>.py --help          # lists every flag + its APP_* env var
+  uv run --exact scripts/<name>.py [args]
+  uv run --exact scripts/<name>.py --help    # lists every flag + its APP_* env var
   ```
+  `--exact` keeps uv's cached environment matched to the header — see the warning
+  under [Decorated logs](#decorated-logs-richlogger) for why it matters.
 - **VS Code:**
   - **Ctrl+Shift+B** → "uv run: current file (3.13)" runs the open script.
   - "uv run: current file (with args)" prompts for flags (e.g.
     `--name Aidan --times 2`).
-  - **F5** debugs the open script. Unlike `uv run`, the debugger uses the
-    selected **dev venv** (default `.venv313`), so it debugs against the
-    `scriptkit` you installed with `setup-venvs.ps1`, not the script's pin.
+  - **F5** → "Debug current script — uv (header-aware)" debugs the open script
+    *through* uv, so it debugs the script's own pinned dependencies — including
+    RichLogger when the header pins `[rich]`. A preLaunchTask starts it under
+    debugpy and VS Code attaches; mechanics in
+    [.vscode/debug/sitecustomize.py](.vscode/debug/sitecustomize.py).
+  - The "venv 3.11/3.12/3.13 (stdlib)" configs are the fallback: they launch the
+    dev venv directly, so they debug against the `scriptkit` from
+    `setup-venvs.ps1` rather than the script's pin, and always log `[TAG]`.
+    Use them if the uv attach misbehaves or the log style doesn't matter.
 
 ### Decorated logs (RichLogger)
 
-Whether output is decorated (colored, structured) or the plain `[TAG]` fallback
-depends on where `rich_logger` is available:
+**The script's own PEP 723 header is the switch.** Pin the `[rich]` extra and the
+script logs through RichLogger (colored, aligned labels); pin plain `scriptkit`
+and it logs through the stdlib `[TAG]` fallback. Nothing else configures this —
+same header, same logging, on every uv-based path:
 
-- **Editor (Run button, F5, tests):** always RichLogger — the dev venvs install
-  `scriptkit[rich]`.
-- **`uv run`:** RichLogger only if the script's PEP 723 header pins the extra;
-  otherwise the stdlib fallback. Add it per script when you want color:
-  ```python
-  # dependencies = [
-  #   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.3",
-  # ]
-  ```
+Pick one of these in the header — they're alternatives, not both:
+
+```python
+# dependencies = [                                                                  # decorated:
+#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.4",
+# ]
+# dependencies = [                                                                  # [TAG] fallback:
+#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.4",
+# ]
+```
+
+| Path | Honors `[rich]`? | Why |
+| --- | --- | --- |
+| `uv run --exact` (PowerShell) | yes | reads the header |
+| **Ctrl+Shift+B** — "uv run: current file" | yes | wraps `uv run --exact` |
+| **F5** — "Debug current script — uv" | yes | `uv run --exact --with debugpy` |
+| F5 — "venv (stdlib)" configs, tests, IntelliSense | no — always `[TAG]` | dev venvs carry plain `scriptkit` |
+| ▶ Run button (Python extension) | no — always `[TAG]` | runs the selected interpreter, not uv |
+
+The dev venvs deliberately install plain `scriptkit`, so anything venv-based
+shows the fallback regardless of the header. The ▶ Run button is interpreter-based
+and cannot be redirected at the workspace level — **use Ctrl+Shift+B** when you
+want the run to reflect what the script really does.
+
+> **Always pass `--exact` when running by hand.** uv keeps one cached environment
+> per script and, without `--exact`, only ever *adds* to it. Remove `[rich]` from a
+> header and uv reuses the cached env that still contains `rich_logger`, so the
+> script keeps printing decorated output it no longer asks for — silently, with no
+> reinstall line to hint at it. (`--refresh` does **not** fix this; it refreshes
+> distributions, not environment membership.) `--exact` prunes the env to exactly
+> the header's dependencies, which is what makes `[rich]` authoritative in both
+> directions. Every `uv run` task in [.vscode/tasks.json](.vscode/tasks.json)
+> already passes it.
+
+Labels match the method that emits them, so a log line names the call that wrote
+it:
+
+| Purpose | Methods → labels |
+| --- | --- |
+| I/O and metadata | `read` `write` `metadata` |
+| Flow and structure | `stage` `step` `substep` `info` |
+| Config and results | `config` `metric` `result` |
+| Warnings and alerts | `warning` `alert` |
+| Errors | `error` |
+| Developer checks | `check` `debug` |
+
+*(RichLogger ≥ v1.0.4, pinned by scriptkit v0.2.4's `[rich]` extra. Earlier
+RichLogger releases aliased three of these — `substep`→SUB, `info`→STATUS, and
+`metadata` was named `meta` — so if you see SUB or STATUS in output, an older
+`rich_logger` is being resolved: re-run with `--exact`, and re-run
+`.\setup-venvs.ps1 -Force` if it is a venv-based path.)*
 
 **Write every log call as one pre-formatted string.** RichLogger's methods take a
 single `message`, so pass an f-string — never extra positional or keyword
@@ -165,23 +219,33 @@ Tasks: **`pytest (3.13)`** (default test task), **`pytest (3.11/3.12)`**,
 ### Adopting a new `scriptkit` release
 
 `scriptkit` is versioned on its own; scripts pin a tag, so **nothing here changes
-until you choose to move.** The repo currently defaults to **`v0.2.3`**. When a
+until you choose to move.** The repo currently defaults to **`v0.2.4`**. When a
 newer tag ships and you want new scripts to use it:
 
 1. **Bump the default pin** — the `-Tag` default in
-   [`new-script.ps1`](new-script.ps1). New scripts scaffold against it
-   automatically; this is the one source of truth for the default.
-2. **Update this README's version references** to match — the pin in the
-   RichLogger example above and the `setup-venvs.ps1 -Tag` example. (These docs
-   are the only other place the version is written by hand.)
+   [`new-script.ps1`](new-script.ps1) (what new scripts scaffold against) and in
+   [`setup-venvs.ps1`](setup-venvs.ps1) (what the dev venvs install). Keep the two
+   in step.
+2. **Update this README's version references** to match — the pins in the
+   `[rich]` example above and the `setup-venvs.ps1 -Tag` example, plus the
+   RichLogger version note. (These docs are the only other place a version is
+   written by hand.)
 3. **Refresh the dev venvs** so the editor, lint, and tests reflect what new
-   scripts will run:
+   scripts will run — `-Force` matters, because without it existing venvs keep
+   packages a narrower pin no longer asks for:
    ```powershell
    .\setup-venvs.ps1 -Tag vX.Y.Z -Force
    ```
 4. **Leave existing scripts on their current pins.** Each keeps the `scriptkit`
    it was written against on purpose; bump an individual script's header only
    when you want its newer behavior — then re-run and re-test that one script.
+
+> **Stale environments are the usual culprit** when a script's logging or behavior
+> doesn't match its header. Both caches only grow unless told otherwise: `uv run`
+> needs `--exact` to prune its per-script env, and `setup-venvs.ps1` needs `-Force`
+> to rebuild rather than top up. A version bump that widens then narrows an extra
+> (adding `[rich]`, then removing it) is exactly the case that leaves a stale
+> `rich_logger` behind and makes a plain-pinned script look decorated.
 
 ### Conventions
 
