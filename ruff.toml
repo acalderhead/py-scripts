@@ -1,3 +1,7 @@
 # Lint config for self-contained scripts (each carries its own PEP 723 header).
 line-length = 100
 target-version = "py311"
+
+[lint]
+# Pin the rule set explicitly so results are deterministic across ruff versions.
+select = ["E", "F", "I", "W", "UP"]
