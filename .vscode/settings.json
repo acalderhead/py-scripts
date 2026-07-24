@@ -1,6 +1,6 @@
 {
   // Interpreter used for IntelliSense, linting, and debugging. Create it once
-  // with:  uv venv  &&  uv pip install "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.0"
+  // with:  uv venv  &&  uv pip install "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.1"
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "python.analysis.extraPaths": ["${workspaceFolder}/scripts"],
 

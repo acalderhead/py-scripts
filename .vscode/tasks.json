@@ -2,23 +2,36 @@
   "version": "2.0.0",
   "tasks": [
     {
-      // Canonical way to run a script: uv reads the file's PEP 723 header and
-      // builds an isolated env with exactly the pinned scriptkit version.
-      // Run with Ctrl+Shift+B (default build task) on the open file.
+      // Run the open script with uv (reads its PEP 723 pin). Default build task
+      // → Ctrl+Shift+B. No arguments.
       "label": "uv run: current file",
       "type": "shell",
-      "command": "uv",
-      "args": ["run", "${relativeFile}"],
+      "command": "uv run \"${relativeFile}\"",
       "group": { "kind": "build", "isDefault": true },
+      "presentation": { "clear": true },
+      "problemMatcher": []
+    },
+    {
+      // Same, but prompts for arguments (e.g. --name Aidan --times 2).
+      "label": "uv run: current file (with args)",
+      "type": "shell",
+      "command": "uv run \"${relativeFile}\" ${input:scriptArgs}",
       "presentation": { "clear": true },
       "problemMatcher": []
     },
     {
       "label": "uv run: current file --help",
       "type": "shell",
-      "command": "uv",
-      "args": ["run", "${relativeFile}", "--help"],
+      "command": "uv run \"${relativeFile}\" --help",
       "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "scriptArgs",
+      "type": "promptString",
+      "description": "Arguments to pass to the script",
+      "default": "--help"
     }
   ]
 }
