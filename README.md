@@ -155,12 +155,6 @@ it:
 | Errors | `error` |
 | Developer checks | `check` `debug` |
 
-*(RichLogger ≥ v1.0.4, pinned by scriptkit v0.2.4's `[rich]` extra. Earlier
-RichLogger releases aliased three of these — `substep`→SUB, `info`→STATUS, and
-`metadata` was named `meta` — so if you see SUB or STATUS in output, an older
-`rich_logger` is being resolved: re-run with `--exact`, and re-run
-`.\setup-venvs.ps1 -Force` if it is a venv-based path.)*
-
 **Write every log call as one pre-formatted string.** RichLogger's methods take a
 single `message`, so pass an f-string — never extra positional or keyword
 arguments:
