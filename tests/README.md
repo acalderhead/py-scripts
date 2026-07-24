@@ -15,11 +15,11 @@ def test_settings_defaults(tmp_path):
 
 ## Running
 
-Tests need `scriptkit` available in the active interpreter. Use the repo's
-`.venv` (see the root README for one-time setup), then:
+Tests need `scriptkit` available in the active interpreter. Use one of the dev
+venvs from `setup-venvs.ps1` (see the root README for one-time setup), then:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q
+.\.venv313\Scripts\python.exe -m pytest -q
 ```
 
 Or press the Testing beaker in VS Code (already wired in `.vscode/settings.json`).
