@@ -1,0 +1,6 @@
+# Normalize line endings: LF in the repo, checked out native on each platform.
+* text=auto eol=lf
+
+# Windows helpers keep CRLF.
+*.ps1 text eol=crlf
+*.bat text eol=crlf

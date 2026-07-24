@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Environments / uv caches
+.venv/
+venv/
+.env
+.uv/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+
+# Script runtime output (data/output dirs created by ScriptSettings)
+output/
+data/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
