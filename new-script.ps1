@@ -1,20 +1,24 @@
 <#
 .SYNOPSIS
-    Scaffold a new scriptkit-based script from the canonical template.
+    DEPRECATED: scaffold a new scriptkit-based script from the canonical template.
 
 .DESCRIPTION
-    Copies templates/script_template.py from the py-scriptkit source of truth
-    (the local sibling repo if present, otherwise GitHub raw at the given tag)
-    into this repo's scripts/ folder, names it, and pins its scriptkit
-    dependency to -Tag. This is the only step needed to start a new script —
-    the CLI, env wiring, path cascade, and logging are inherited from scriptkit.
+    Superseded by the cross-platform `scriptkit new` command (shipped in
+    scriptkit >= v0.4.0); this Windows-only script will be removed next release.
+    Prefer:  .\.venv313\Scripts\scriptkit.exe new <name>
+
+    Copies script_template.py from the py-scriptkit source of truth (the local
+    sibling repo if present, otherwise GitHub raw at the given tag) into this
+    repo's scripts/ folder, names it, and pins its scriptkit dependency to -Tag.
+    This is the only step needed to start a new script — the CLI, env wiring,
+    path cascade, and logging are inherited from scriptkit.
 
 .PARAMETER Name
     Name for the new script; punctuation is normalized to snake_case and a .py
     extension is added (e.g. "Reconcile Invoices" -> reconcile_invoices.py).
 
 .PARAMETER Tag
-    scriptkit release tag to pin the new script to (default: v0.2.4).
+    scriptkit release tag to pin the new script to (default: v0.4.0).
 
 .PARAMETER Force
     Overwrite an existing file of the same name.
@@ -27,11 +31,13 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Name,
-    [string]$Tag = "v0.2.4",
+    [string]$Tag = "v0.4.0",
     [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
+
+Write-Warning "new-script.ps1 is deprecated and will be removed next release. Use: scriptkit new $Name"
 
 # Normalize to a snake_case .py filename.
 $stem = ($Name -replace '\.py$', '' -replace '[^A-Za-z0-9]+', '_').Trim('_').ToLower()
@@ -46,7 +52,9 @@ if ((Test-Path $dest) -and -not $Force) {
 }
 
 # Prefer the local sibling repo; fall back to GitHub raw at the requested tag.
-$local = Join-Path $PSScriptRoot "..\py-scriptkit\templates\script_template.py"
+# The template lives inside the package now (src/scriptkit/templates/), the same
+# copy `scriptkit new` ships.
+$local = Join-Path $PSScriptRoot "..\py-scriptkit\src\scriptkit\templates\script_template.py"
 if (Test-Path $local) {
     # Read as UTF-8 explicitly. Windows PowerShell 5.1's Get-Content defaults to
     # the ANSI codepage and would corrupt non-ASCII characters (e.g. the box-
@@ -54,7 +62,7 @@ if (Test-Path $local) {
     $content = [System.IO.File]::ReadAllText($local)
     Write-Host "Template: local py-scriptkit ($local)"
 } else {
-    $url = "https://raw.githubusercontent.com/acalderhead/py-scriptkit/$Tag/templates/script_template.py"
+    $url = "https://raw.githubusercontent.com/acalderhead/py-scriptkit/$Tag/src/scriptkit/templates/script_template.py"
     $content = (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
     Write-Host "Template: GitHub raw @ $Tag"
 }

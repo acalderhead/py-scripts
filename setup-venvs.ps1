@@ -12,7 +12,9 @@
     a script pins the `[rich]` extra, independent of these venvs.
 
 .PARAMETER Tag
-    scriptkit release tag to install into each venv (default: v0.2.4).
+    scriptkit release tag to install into each venv (default: v0.4.0). This also
+    determines the default pin used by `scriptkit new` when scaffolding from a
+    dev venv, since it pins the scriptkit version it runs as.
 
 .PARAMETER Force
     Delete and recreate venvs that already exist.
@@ -23,7 +25,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Tag = "v0.2.4",
+    [string]$Tag = "v0.4.0",
     [switch]$Force
 )
 

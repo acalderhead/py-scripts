@@ -12,7 +12,7 @@ cascade, and logging all come from `scriptkit`, so you write only `Settings` and
 py-scripts/
 ├── scripts/           the utilities (one self-contained file per tool)
 ├── tests/             optional pytest tests (see tests/README.md)
-├── new-script.ps1     scaffolds a new pinned script from scriptkit's template
+├── new-script.ps1     (deprecated) local scaffolder — prefer `scriptkit new`
 ├── setup-venvs.ps1    builds the per-version dev venvs (.venv311/312/313)
 ├── ruff.toml          lint / format config
 └── .vscode/           run / debug / test config
@@ -33,7 +33,7 @@ pinned `scriptkit` plus dev tools installed):
 
 ```powershell
 .\setup-venvs.ps1                 # builds .venv311 / .venv312 / .venv313
-.\setup-venvs.ps1 -Tag v0.2.4     # pin a specific scriptkit into the venvs
+.\setup-venvs.ps1 -Tag v0.4.0     # pin a specific scriptkit into the venvs
 .\setup-venvs.ps1 -Force          # delete and recreate them
 ```
 
@@ -59,13 +59,13 @@ squiggle).
 ### Authoring a new script
 
 A "script" here is one file that already has all the plumbing — you only add its
-inputs and its logic. `new-script.ps1` is what gives you that starting point: it
-copies scriptkit's canonical template into `scripts/`, renames it, and pins its
-`scriptkit` dependency, so the new file is a **runnable skeleton from the first
-save**. From there the cycle is scaffold → edit → run → commit:
+inputs and its logic. `scriptkit new` gives you that starting point: it writes a
+fresh copy of scriptkit's canonical template into `scripts/`, names it, and pins
+its `scriptkit` dependency, so the new file is a **runnable skeleton from the
+first save**. From there the cycle is scaffold → edit → run → commit:
 
 ```powershell
-.\new-script.ps1 my_tool          # 1. create scripts/my_tool.py (pinned, already runnable)
+.\.venv313\Scripts\scriptkit.exe new my_tool   # 1. create scripts/my_tool.py (pinned, runnable)
 # 2. edit scripts/my_tool.py:
 #      - add fields to Settings   -> each becomes a --flag and an APP_* env var
 #      - write main()             -> what the tool actually does
@@ -73,8 +73,22 @@ uv run --exact scripts/my_tool.py --help   # 3. run it; uv fetches the pinned sc
 git add scripts/my_tool.py; git commit -m "add my_tool"; git push   # 4. save it
 ```
 
-There's no project to build and no environment to manage per script — that four
-step loop is the whole workflow.
+`scriptkit new` ships with `scriptkit`, so it's available from any dev venv that
+has it installed (the `.venv313` above). With no local install, scaffold
+straight from a tag:
+
+```powershell
+uvx --from "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.4.0" scriptkit new my_tool
+```
+
+Either way it scaffolds into `scripts/` and pins the new script to the scriptkit
+version it runs as (the dev venv's, or the `--from` tag). There's no project to
+build and no environment to manage per script — that four-step loop is the whole
+workflow.
+
+> **`new-script.ps1` is deprecated.** The old Windows-only scaffolder still works
+> this release but will be removed in the next one. Prefer `scriptkit new`, which
+> does the same thing on any OS and needs no local checkout of py-scriptkit.
 
 ### Running a script
 
@@ -113,10 +127,10 @@ Pick one of these in the header — they're alternatives, not both:
 
 ```python
 # dependencies = [                                                                  # decorated:
-#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.4",
+#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.4.0",
 # ]
 # dependencies = [                                                                  # [TAG] fallback:
-#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.4",
+#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.4.0",
 # ]
 ```
 
@@ -213,17 +227,19 @@ Tasks: **`pytest (3.13)`** (default test task), **`pytest (3.11/3.12)`**,
 ### Adopting a new `scriptkit` release
 
 `scriptkit` is versioned on its own; scripts pin a tag, so **nothing here changes
-until you choose to move.** The repo currently defaults to **`v0.2.4`**. When a
+until you choose to move.** The repo currently defaults to **`v0.4.0`**. When a
 newer tag ships and you want new scripts to use it:
 
 1. **Bump the default pin** — the `-Tag` default in
-   [`new-script.ps1`](new-script.ps1) (what new scripts scaffold against) and in
-   [`setup-venvs.ps1`](setup-venvs.ps1) (what the dev venvs install). Keep the two
-   in step.
+   [`setup-venvs.ps1`](setup-venvs.ps1). That drives both what the dev venvs
+   install and what `scriptkit new` pins by default, since `scriptkit new` pins
+   the version of scriptkit it runs as. *(The deprecated
+   [`new-script.ps1`](new-script.ps1) carries its own `-Tag` default until it is
+   removed next release.)*
 2. **Update this README's version references** to match — the pins in the
-   `[rich]` example above and the `setup-venvs.ps1 -Tag` example, plus the
-   RichLogger version note. (These docs are the only other place a version is
-   written by hand.)
+   `[rich]` example above, the `setup-venvs.ps1 -Tag` and `uvx --from` examples,
+   and the default stated just above. (These docs are the only other place a
+   version is written by hand.)
 3. **Refresh the dev venvs** so the editor, lint, and tests reflect what new
    scripts will run — `-Force` matters, because without it existing venvs keep
    packages a narrower pin no longer asks for:
