@@ -79,7 +79,7 @@ have it cloned next door, otherwise from GitHub at the requested tag), drops it
 into `scripts/` under a snake_case name, and pins its `scriptkit` dependency:
 
 ```powershell
-.\new-script.ps1 reconcile_invoices          # -> scripts/reconcile_invoices.py @ v0.1.0
+.\new-script.ps1 reconcile_invoices          # -> scripts/reconcile_invoices.py @ v0.2.0
 .\new-script.ps1 "Backup Photos" -Tag v0.2.0 # pin a specific scriptkit release
 .\new-script.ps1 existing_tool -Force        # overwrite an existing file
 ```
@@ -103,7 +103,7 @@ installed, and point VS Code at it:
 
 ```powershell
 uv venv
-uv pip install "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.1.0"
+uv pip install "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.0"
 ```
 
 `.vscode/settings.json` already expects `.venv`. With it in place, the debugger

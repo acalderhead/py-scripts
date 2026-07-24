@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.1.0",
+#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.0",
 # ]
 # ///
 
