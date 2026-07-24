@@ -27,8 +27,8 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ```
 
 Create the per-version dev virtualenvs (used by VS Code for IntelliSense,
-linting, and debugging — one per supported Python minor version, each with the
-pinned `scriptkit` installed):
+linting, and debugging — one per supported Python minor version, each with
+pinned `scriptkit[rich]` (RichLogger) plus dev tools installed):
 
 ```powershell
 .\setup-venvs.ps1                 # builds .venv311 / .venv312 / .venv313
@@ -45,7 +45,12 @@ squiggle).
 > ignores these venvs — it reads the `scriptkit` version the script pins in its
 > own PEP 723 header and fetches exactly that, so a run always reflects the
 > script's real dependencies. The dev venvs exist only for the editor:
-> IntelliSense, linting, tests, and F5 debugging.
+> IntelliSense, linting, tests, and F5 debugging. They include the `[rich]`
+> extra, so the Run button and F5 render RichLogger's decorated output. One
+> consequence: the editor always has RichLogger available, so a script whose
+> header does **not** pin `[rich]` still looks decorated in the editor but prints
+> the plain `[TAG]` fallback under `uv run` — which remains the source of truth
+> for what a script really does.
 
 ## Execution
 
@@ -89,20 +94,31 @@ Two ways; both honor the script's own `scriptkit` pin because both go through
 
 ### Decorated logs (RichLogger)
 
-By default scripts use `scriptkit`'s stdlib logging fallback. For decorated
-(colored, structured) console output, add the `[rich]` extra to the script's
-pin:
+Whether output is decorated (colored, structured) or the plain `[TAG]` fallback
+depends on where `rich_logger` is available:
+
+- **Editor (Run button, F5, tests):** always RichLogger — the dev venvs install
+  `scriptkit[rich]`.
+- **`uv run`:** RichLogger only if the script's PEP 723 header pins the extra;
+  otherwise the stdlib fallback. Add it per script when you want color:
+  ```python
+  # dependencies = [
+  #   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.3",
+  # ]
+  ```
+
+**Write every log call as one pre-formatted string.** RichLogger's methods take a
+single `message`, so pass an f-string — never extra positional or keyword
+arguments:
 
 ```python
-# dependencies = [
-#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.3",
-# ]
+logger.stage(f"Greeting name={name} times={times}")   # works under both backends
+logger.stage("Greeting", name=name, times=times)       # crashes under RichLogger
 ```
 
-`uv run` then pulls RichLogger automatically. Without the extra, the same
-`logger.stage(...)` / `logger.result(...)` calls still work — they just print
-plain `[TAG]`-prefixed lines instead of color. *(Requires
-`acalderhead/rich-logger` to be reachable at the pinned tag.)*
+The stdlib fallback tolerates the second form, but RichLogger does not, so the
+single-string form is the portable one. *(RichLogger requires
+`acalderhead/rich-logger` reachable at its pinned tag.)*
 
 ## Maintenance
 

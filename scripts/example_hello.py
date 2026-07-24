@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.1",
+#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.3",
 # ]
 # ///
 
@@ -37,7 +37,7 @@ class Settings(ScriptSettings):
 
 
 def main(settings: Settings) -> int:
-    logger.stage("Greeting", name=settings.name, times=settings.times)
+    logger.stage(f"Greeting name={settings.name} times={settings.times}")
     for i in range(settings.times):
         logger.info(f"Hello, {settings.name}! ({i + 1}/{settings.times})")
     logger.result("Done")

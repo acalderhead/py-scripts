@@ -5,10 +5,12 @@
 .DESCRIPTION
     Installs uv-managed CPython 3.11 / 3.12 / 3.13, then builds one venv per
     minor version (.venv311 / .venv312 / .venv313). Each venv gets the pinned
-    scriptkit plus the dev tools (pytest, ruff) so the lint / test tasks and F5
-    debugging work. VS Code uses these for IntelliSense, linting, testing, and
-    debugging (default: .venv313); `uv run` still fetches each script's own
-    PEP 723 pin when you actually run it, independent of these venvs.
+    scriptkit[rich] (so the ▶ Run button and F5 debugging show RichLogger's
+    decorated output, matching `uv run`) plus the dev tools (pytest, ruff) so the
+    lint / test tasks work. VS Code uses these for IntelliSense, linting,
+    testing, and debugging (default: .venv313); `uv run` still fetches each
+    script's own PEP 723 pin when you actually run it, independent of these
+    venvs.
 
 .PARAMETER Tag
     scriptkit release tag to install into each venv (default: v0.2.3).
@@ -51,7 +53,9 @@ function Invoke-Uv {
 }
 
 $versions = "3.11", "3.12", "3.13"
-$scriptkit = "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@$Tag"
+# The [rich] extra pulls rich_logger so the editor/debugger render decorated
+# console output, the same as `uv run` on a script whose header pins the extra.
+$scriptkit = "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@$Tag"
 # Dev tooling for the lint / test tasks (kept in sync with scriptkit's own dev
 # extras). These are editor/CI tools only — never a runtime dependency of a
 # script, which pins what it needs in its own PEP 723 header.
