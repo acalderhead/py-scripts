@@ -11,7 +11,7 @@ import example_hello
 def test_settings_defaults(tmp_path):
     s = example_hello.Settings(dir_base=tmp_path)
     assert s.name == "World"
-    assert s.times == 1
+    assert s.times == 2
     # Inherited from scriptkit.ScriptSettings:
     assert s.dir_output == tmp_path / "output"
 

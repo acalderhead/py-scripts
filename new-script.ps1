@@ -14,7 +14,7 @@
     extension is added (e.g. "Reconcile Invoices" -> reconcile_invoices.py).
 
 .PARAMETER Tag
-    scriptkit release tag to pin the new script to (default: v0.2.1).
+    scriptkit release tag to pin the new script to (default: v0.2.3).
 
 .PARAMETER Force
     Overwrite an existing file of the same name.
@@ -27,7 +27,7 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Name,
-    [string]$Tag = "v0.2.1",
+    [string]$Tag = "v0.2.3",
     [switch]$Force
 )
 

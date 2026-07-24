@@ -32,7 +32,7 @@ pinned `scriptkit` installed):
 
 ```powershell
 .\setup-venvs.ps1                 # builds .venv311 / .venv312 / .venv313
-.\setup-venvs.ps1 -Tag v0.2.1     # pin a specific scriptkit into the venvs
+.\setup-venvs.ps1 -Tag v0.2.3     # pin a specific scriptkit into the venvs
 .\setup-venvs.ps1 -Force          # delete and recreate them
 ```
 
@@ -95,7 +95,7 @@ pin:
 
 ```python
 # dependencies = [
-#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.1",
+#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.2.3",
 # ]
 ```
 
@@ -106,11 +106,72 @@ plain `[TAG]`-prefixed lines instead of color. *(Requires
 
 ## Maintenance
 
-- **Bump a script's `scriptkit` pin only when you want newer library behavior.**
-  Each script keeps the version it was written against; there is no repo-wide
-  upgrade. New scripts default to the tag baked into `new-script.ps1`.
+All commands below assume the dev venvs from `setup-venvs.ps1` exist (ruff and
+pytest are installed into each). Every one also has a VS Code task — run it from
+**Terminal → Run Task** instead of typing the path if you prefer.
+
+### Linting & formatting
+
+Ruff is configured by [`ruff.toml`](ruff.toml) (line length, rule set) and runs
+from any dev venv. From the repo root:
+
+```powershell
+.\.venv313\Scripts\python.exe -m ruff check .          # report lint issues
+.\.venv313\Scripts\python.exe -m ruff check --fix .    # apply the safe auto-fixes
+.\.venv313\Scripts\python.exe -m ruff format .         # reformat in place
+```
+
+Lint is Python-version-independent, so the default `.venv313` is enough — no
+need to run it per version. Tasks: **`ruff check`**, **`ruff format`**.
+Format-on-save is already enabled for Python files ([.vscode/settings.json](.vscode/settings.json)),
+so day to day you mostly just save.
+
+### Tests
+
+Tests are optional (see [`tests/README.md`](tests/README.md)) and live in
+`tests/`, importing each script by module name. They need `scriptkit` **and**
+`pytest` — both are in the dev venvs. Run on the default version:
+
+```powershell
+.\.venv313\Scripts\python.exe -m pytest -q
+```
+
+Run on all three versions (the local equivalent of a CI matrix — a script's
+PEP 723 pin allows any of 3.11–3.13, so tests should pass on all):
+
+```powershell
+.\.venv311\Scripts\python.exe -m pytest -q; .\.venv312\Scripts\python.exe -m pytest -q; .\.venv313\Scripts\python.exe -m pytest -q
+```
+
+Tasks: **`pytest (3.13)`** (default test task), **`pytest (3.11/3.12)`**,
+**`pytest (all versions)`** — or the VS Code Testing beaker.
+
+### Adopting a new `scriptkit` release
+
+`scriptkit` is versioned on its own; scripts pin a tag, so **nothing here changes
+until you choose to move.** The repo currently defaults to **`v0.2.3`**. When a
+newer tag ships and you want new scripts to use it:
+
+1. **Bump the default pin** — the `-Tag` default in
+   [`new-script.ps1`](new-script.ps1). New scripts scaffold against it
+   automatically; this is the one source of truth for the default.
+2. **Update this README's version references** to match — the pin in the
+   RichLogger example above and the `setup-venvs.ps1 -Tag` example. (These docs
+   are the only other place the version is written by hand.)
+3. **Refresh the dev venvs** so the editor, lint, and tests reflect what new
+   scripts will run:
+   ```powershell
+   .\setup-venvs.ps1 -Tag vX.Y.Z -Force
+   ```
+4. **Leave existing scripts on their current pins.** Each keeps the `scriptkit`
+   it was written against on purpose; bump an individual script's header only
+   when you want its newer behavior — then re-run and re-test that one script.
+
+### Conventions
+
 - **Shared logic that several scripts need belongs in `scriptkit`, not copied
   here.** If you find yourself pasting the same helper into a second script,
   that's the signal to promote it to the library (a new scriptkit release).
-- Keep secrets out of source and out of CLI arguments; prefer environment
-  variables (`APP_*`).
+- **Keep secrets out of source and out of CLI arguments** (they leak into
+  process lists, shell history, and logs); prefer environment variables
+  (`APP_*`).
