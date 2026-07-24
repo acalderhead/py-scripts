@@ -2,13 +2,42 @@
   "version": "0.2.0",
   "configurations": [
     {
-      // Debugs the open script using the .venv interpreter (see settings.json).
-      // The .venv's scriptkit is used for debugging; `uv run` remains the way to
-      // run against a script's exact pinned version.
-      "name": "Debug current script (.venv)",
+      // Debugs the open script using whichever interpreter is currently selected
+      // (Python: Select Interpreter). Defaults to .venv313 — see settings.json.
+      "name": "Debug current script (selected interpreter)",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      // Debug pinned to Python 3.13, regardless of the selected interpreter.
+      "name": "Debug current script (3.13)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "python": "${workspaceFolder}/.venv313/Scripts/python.exe",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      // Debug pinned to Python 3.12.
+      "name": "Debug current script (3.12)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "python": "${workspaceFolder}/.venv312/Scripts/python.exe",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      // Debug pinned to Python 3.11 (the scripts' requires-python floor).
+      "name": "Debug current script (3.11)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "python": "${workspaceFolder}/.venv311/Scripts/python.exe",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}"
     }

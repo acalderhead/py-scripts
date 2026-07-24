@@ -2,27 +2,44 @@
   "version": "2.0.0",
   "tasks": [
     {
-      // Run the open script with uv (reads its PEP 723 pin). Default build task
-      // → Ctrl+Shift+B. No arguments.
-      "label": "uv run: current file",
+      // Default build task → Ctrl+Shift+B. Runs the open script with uv on the
+      // default Python (3.13), matching the default debug/IntelliSense version.
+      // uv still honors the script's PEP 723 pin; --python just fixes the minor.
+      "label": "uv run: current file (3.13)",
       "type": "shell",
-      "command": "uv run \"${relativeFile}\"",
+      "command": "uv run --python 3.13 \"${relativeFile}\"",
       "group": { "kind": "build", "isDefault": true },
       "presentation": { "clear": true },
       "problemMatcher": []
     },
     {
-      // Same, but prompts for arguments (e.g. --name Aidan --times 2).
+      "label": "uv run: current file (3.12)",
+      "type": "shell",
+      "command": "uv run --python 3.12 \"${relativeFile}\"",
+      "group": "build",
+      "presentation": { "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "uv run: current file (3.11)",
+      "type": "shell",
+      "command": "uv run --python 3.11 \"${relativeFile}\"",
+      "group": "build",
+      "presentation": { "clear": true },
+      "problemMatcher": []
+    },
+    {
+      // Prompts for arguments (e.g. --name Aidan --times 2), on the default 3.13.
       "label": "uv run: current file (with args)",
       "type": "shell",
-      "command": "uv run \"${relativeFile}\" ${input:scriptArgs}",
+      "command": "uv run --python 3.13 \"${relativeFile}\" ${input:scriptArgs}",
       "presentation": { "clear": true },
       "problemMatcher": []
     },
     {
       "label": "uv run: current file --help",
       "type": "shell",
-      "command": "uv run \"${relativeFile}\" --help",
+      "command": "uv run --python 3.13 \"${relativeFile}\" --help",
       "problemMatcher": []
     }
   ],

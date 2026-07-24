@@ -4,6 +4,7 @@ __pycache__/
 
 # Environments / uv caches
 .venv/
+.venv*/
 venv/
 .env
 .uv/
