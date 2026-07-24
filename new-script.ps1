@@ -48,7 +48,10 @@ if ((Test-Path $dest) -and -not $Force) {
 # Prefer the local sibling repo; fall back to GitHub raw at the requested tag.
 $local = Join-Path $PSScriptRoot "..\py-scriptkit\templates\script_template.py"
 if (Test-Path $local) {
-    $content = Get-Content -Raw $local
+    # Read as UTF-8 explicitly. Windows PowerShell 5.1's Get-Content defaults to
+    # the ANSI codepage and would corrupt non-ASCII characters (e.g. the box-
+    # drawing separators in the template docstring).
+    $content = [System.IO.File]::ReadAllText($local)
     Write-Host "Template: local py-scriptkit ($local)"
 } else {
     $url = "https://raw.githubusercontent.com/acalderhead/py-scriptkit/$Tag/templates/script_template.py"
