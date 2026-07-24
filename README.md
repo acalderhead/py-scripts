@@ -161,7 +161,7 @@ arguments:
 
 ```python
 logger.stage(f"Greeting name={name} times={times}")   # works under both backends
-logger.stage("Greeting", name=name, times=times)       # crashes under RichLogger
+logger.stage("Greeting", name=name, times=times)      # crashes under RichLogger
 ```
 
 The stdlib fallback tolerates the second form, but RichLogger does not, so the
