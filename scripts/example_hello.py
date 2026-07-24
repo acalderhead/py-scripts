@@ -14,8 +14,8 @@ Purpose
 
 Usage
 ─────
-    uv run example_hello.py --name World --times 3
-    APP_NAME=Cenvar uv run example_hello.py
+    uv run scripts/example_hello.py --name World --times 3
+    APP_NAME=Cenvar uv run scripts/example_hello.py
 """
 
 import sys
@@ -33,7 +33,7 @@ logger = get_logger(__file__)
 @dataclass(frozen=True)
 class Settings(ScriptSettings):
     name: str = "World"
-    times: int = 1
+    times: int = 2
 
 
 def main(settings: Settings) -> int:
