@@ -1,12 +1,8 @@
 <#
 .SYNOPSIS
-    DEPRECATED: scaffold a new scriptkit-based script from the canonical template.
+    Scaffold a new scriptkit-based script from the canonical template.
 
 .DESCRIPTION
-    Superseded by the cross-platform `scriptkit new` command (shipped in
-    scriptkit >= v0.4.0); this Windows-only script will be removed next release.
-    Prefer:  .\.venv313\Scripts\scriptkit.exe new <name>
-
     Copies script_template.py from the py-scriptkit source of truth (the local
     sibling repo if present, otherwise GitHub raw at the given tag) into this
     repo's scripts/ folder, names it, and pins its scriptkit dependency to -Tag.
@@ -18,7 +14,7 @@
     extension is added (e.g. "Reconcile Invoices" -> reconcile_invoices.py).
 
 .PARAMETER Tag
-    scriptkit release tag to pin the new script to (default: v0.4.0).
+    scriptkit release tag to pin the new script to (default: v0.5.0).
 
 .PARAMETER Force
     Overwrite an existing file of the same name.
@@ -31,13 +27,11 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Name,
-    [string]$Tag = "v0.4.0",
+    [string]$Tag = "v0.5.1",
     [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
-
-Write-Warning "new-script.ps1 is deprecated and will be removed next release. Use: scriptkit new $Name"
 
 # Normalize to a snake_case .py filename.
 $stem = ($Name -replace '\.py$', '' -replace '[^A-Za-z0-9]+', '_').Trim('_').ToLower()
@@ -52,7 +46,7 @@ if ((Test-Path $dest) -and -not $Force) {
 }
 
 # Prefer the local sibling repo; fall back to GitHub raw at the requested tag.
-# The template lives inside the package now (src/scriptkit/templates/), the same
+# The template lives inside the package (src/scriptkit/templates/), the same
 # copy `scriptkit new` ships.
 $local = Join-Path $PSScriptRoot "..\py-scriptkit\src\scriptkit\templates\script_template.py"
 if (Test-Path $local) {
