@@ -78,7 +78,7 @@ has it installed (the `.venv313` above). With no local install, scaffold
 straight from a tag:
 
 ```powershell
-uvx --from "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.4.0" scriptkit new my_tool
+uvx --from "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.0" scriptkit new my_tool
 ```
 
 Either way it scaffolds into `scripts/` and pins the new script to the scriptkit
@@ -127,10 +127,10 @@ Pick one of these in the header — they're alternatives, not both:
 
 ```python
 # dependencies = [                                                                  # decorated:
-#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.4.0",
+#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.0",
 # ]
 # dependencies = [                                                                  # [TAG] fallback:
-#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.4.0",
+#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.0",
 # ]
 ```
 
