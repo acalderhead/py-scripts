@@ -18,5 +18,17 @@
   },
 
   // Keep files LF to match .gitattributes.
-  "files.eol": "\n"
+  "files.eol": "\n",
+
+  // Status-bar "run via uv" button (VSCode Task Buttons extension:
+  // spencerwmiles.vscode-task-buttons). Clicking it fires the default build
+  // task, so it runs the active script through `uv run --exact` and honors that
+  // script's PEP 723 pin exactly like Ctrl+Shift+B does.
+  "VsCodeTaskButtons.tasks": [
+    {
+      "label": "$(play) uv run",
+      "task": "uv run: current file (3.13)",
+      "tooltip": "Run the active script via uv run --exact (honors its PEP 723 pin)"
+    }
+  ]
 }

@@ -2,6 +2,7 @@
   "recommendations": [
     "ms-python.python",
     "ms-python.debugpy",
-    "charliermarsh.ruff"
+    "charliermarsh.ruff",
+    "spencerwmiles.vscode-task-buttons"
   ]
 }
