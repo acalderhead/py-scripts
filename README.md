@@ -59,13 +59,14 @@ squiggle).
 ### Authoring a new script
 
 A "script" here is one file that already has all the plumbing — you only add its
-inputs and its logic. `scriptkit new` gives you that starting point: it writes a
+inputs and its logic. `new-script.ps1` gives you that starting point: it writes a
 fresh copy of scriptkit's canonical template into `scripts/`, names it, and pins
 its `scriptkit` dependency, so the new file is a **runnable skeleton from the
-first save**. From there the cycle is scaffold → edit → run → commit:
+first save**. Double-click `new-script.bat` (it prompts for a name and re-asks on
+a collision), or run the loop scaffold → edit → run → commit:
 
 ```powershell
-.\.venv313\Scripts\scriptkit.exe new my_tool   # 1. create scripts/my_tool.py (pinned, runnable)
+.\new-script.ps1 my_tool                   # 1. create scripts/my_tool.py (pinned, runnable)
 # 2. edit scripts/my_tool.py:
 #      - add fields to Settings   -> each becomes a --flag and an APP_* env var
 #      - write main()             -> what the tool actually does
@@ -73,22 +74,15 @@ uv run --exact scripts/my_tool.py --help   # 3. run it; uv fetches the pinned sc
 git add scripts/my_tool.py; git commit -m "add my_tool"; git push   # 4. save it
 ```
 
-`scriptkit new` ships with `scriptkit`, so it's available from any dev venv that
-has it installed (the `.venv313` above). With no local install, scaffold
-straight from a tag:
+`new-script.ps1` copies the template from the sibling `py-scriptkit` checkout if
+present, otherwise GitHub raw at `-Tag` (default the current release), and pins
+the new script to that tag. Run it with no name — or double-click the `.bat` — for
+an interactive prompt. `new-test.ps1` / `new-test.bat` scaffold a matching test
+(pick an existing script, or name a new one).
 
-```powershell
-uvx --from "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.3" scriptkit new my_tool
-```
-
-Either way it scaffolds into `scripts/` and pins the new script to the scriptkit
-version it runs as (the dev venv's, or the `--from` tag). There's no project to
-build and no environment to manage per script — that four-step loop is the whole
-workflow.
-
-> **`new-script.ps1` is deprecated.** The old Windows-only scaffolder still works
-> this release but will be removed in the next one. Prefer `scriptkit new`, which
-> does the same thing on any OS and needs no local checkout of py-scriptkit.
+> `scriptkit new` (the cross-platform CLI) scaffolds a **module**, not a script —
+> reach for it (or `new-module.ps1`) when you factor shared logic out into
+> importable modules.
 
 ### Running a script
 
@@ -127,10 +121,10 @@ Pick one of these in the header — they're alternatives, not both:
 
 ```python
 # dependencies = [                                                                  # decorated:
-#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.3",
+#   "scriptkit[rich] @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.4",
 # ]
 # dependencies = [                                                                  # [TAG] fallback:
-#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.3",
+#   "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@v0.5.4",
 # ]
 ```
 
