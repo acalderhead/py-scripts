@@ -27,7 +27,7 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Name,
-    [string]$Tag = "v0.5.1",
+    [string]$Tag = "v0.5.2",
     [switch]$Force
 )
 
