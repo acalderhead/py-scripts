@@ -3,64 +3,131 @@
     Scaffold a new pytest file from scriptkit's test template.
 
 .DESCRIPTION
-    Copies test_template.py from the py-scriptkit source of truth (the local
-    sibling repo if present, otherwise GitHub raw at the given tag) into this
-    repo's tests/ folder, named test_<name>.py. The test template carries no
-    dependency pin, so nothing is repointed.
+    With -Name, creates tests/test_<name>.py directly. With no -Name (the .bat
+    double-click), runs interactively: pick an existing script to test, or name
+    a brand-new test file. On a name collision it explains and re-prompts rather
+    than overwriting. The template comes from the sibling py-scriptkit repo
+    (local checkout if present, otherwise GitHub raw at -Tag).
 
 .PARAMETER Name
-    Name for the module under test; punctuation is normalized to snake_case and
-    a leading "test_" is stripped, then re-added (e.g. "reconcile" ->
-    test_reconcile.py).
+    Optional. A leading "test_" is stripped and re-added (e.g. "reconcile" ->
+    test_reconcile.py). Omit for the interactive flow.
 
 .PARAMETER Tag
-    scriptkit release tag used only for the GitHub-raw fallback (default: v0.5.0).
+    scriptkit release tag for the GitHub-raw template fallback (default: v0.5.4).
 
 .PARAMETER Force
-    Overwrite an existing file of the same name.
+    Overwrite an existing file (honored only with -Name).
 
 .EXAMPLE
-    .\new-test.ps1 reconcile
-    .\new-test.ps1 test_stable_check -Force
+    .\new-test.ps1                 # interactive
+    .\new-test.ps1 reconcile       # -> tests/test_reconcile.py
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true, Position = 0)]
+    [Parameter(Position = 0)]
     [string]$Name,
-    [string]$Tag = "v0.5.3",
+    [string]$Tag = "v0.5.4",
     [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
 
-# Normalize to a snake_case stem; drop any leading "test_" so it is added once.
-$stem = ($Name -replace '\.py$', '' -replace '^test_', '' -replace '[^A-Za-z0-9]+', '_').Trim('_').ToLower()
-if (-not $stem) { throw "Could not derive a filename from '$Name'." }
-
-# Always write into this repo's tests/ folder, regardless of current directory.
 $testsDir = Join-Path $PSScriptRoot "tests"
-if (-not (Test-Path $testsDir)) { New-Item -ItemType Directory -Path $testsDir | Out-Null }
-$dest = Join-Path $testsDir "test_$stem.py"
-if ((Test-Path $dest) -and -not $Force) {
-    throw "Refusing to overwrite $dest (pass -Force to replace it)."
+
+# Normalize to a snake_case stem; drop any leading "test_" so it is added once.
+function Get-TestStem([string]$raw) {
+    ($raw -replace '\.py$', '' -replace '^test_', '' -replace '[^A-Za-z0-9]+', '_').Trim('_').ToLower()
 }
 
-# Prefer the local sibling repo; fall back to GitHub raw at the requested tag.
-$local = Join-Path $PSScriptRoot "..\py-scriptkit\src\scriptkit\templates\test_template.py"
-if (Test-Path $local) {
-    # Read as UTF-8 explicitly. Windows PowerShell 5.1's Get-Content defaults to
-    # the ANSI codepage and would corrupt non-ASCII characters (e.g. the box-
-    # drawing separators in the template docstring).
-    $content = [System.IO.File]::ReadAllText($local)
-    Write-Host "Template: local py-scriptkit ($local)"
-} else {
-    $url = "https://raw.githubusercontent.com/acalderhead/py-scriptkit/$Tag/src/scriptkit/templates/test_template.py"
-    $content = (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
-    Write-Host "Template: GitHub raw @ $Tag"
+# Existing script/module files that could be tested (recurses scripts\ + src\).
+function Find-SourceFiles {
+    $files = @()
+    foreach ($dir in @("scripts", "src")) {
+        $root = Join-Path $PSScriptRoot $dir
+        if (Test-Path $root) {
+            $found = Get-ChildItem $root -Recurse -File -Filter *.py
+            $files += $found | Where-Object { $_.Name -notlike "test_*" -and $_.Name -ne "__init__.py" -and $_.FullName -notmatch '[\\/](tests|templates)[\\/]' }
+        }
+    }
+    $files | Sort-Object Name
 }
+
+# Read the test template from the sibling py-scriptkit repo, or GitHub raw.
+function Get-TestTemplate {
+    $local = Join-Path $PSScriptRoot "..\py-scriptkit\src\scriptkit\templates\test_template.py"
+    if (Test-Path $local) {
+        Write-Host "Template: local py-scriptkit ($local)"
+        return [System.IO.File]::ReadAllText($local)
+    }
+    $url = "https://raw.githubusercontent.com/acalderhead/py-scriptkit/$Tag/src/scriptkit/templates/test_template.py"
+    Write-Host "Template: GitHub raw @ $Tag"
+    return (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
+}
+
+$stem = $null
+
+if ($Name) {
+    $stem = Get-TestStem $Name
+    if (-not $stem) { throw "Could not derive a filename from '$Name'." }
+    $dest = Join-Path $testsDir "test_$stem.py"
+    if ((Test-Path $dest) -and -not $Force) {
+        throw "Refusing to overwrite $dest (pass -Force to replace it)."
+    }
+} else {
+    $answer = Read-Host "Create a test for an EXISTING script/module file? [y/N]"
+    if ($answer -match '^\s*[Yy]') {
+        $candidates = @(Find-SourceFiles)
+        if ($candidates.Count -eq 0) {
+            Write-Host "No source files found under scripts\ or src\; name a new test instead."
+        } else {
+            while (-not $stem) {
+                Write-Host ""
+                Write-Host "Select a file to create a test for:"
+                for ($i = 0; $i -lt $candidates.Count; $i++) {
+                    Write-Host ("  [{0}] {1}" -f ($i + 1), $candidates[$i].Name)
+                }
+                $pick = Read-Host "Number (blank to cancel)"
+                if ([string]::IsNullOrWhiteSpace($pick)) { Write-Host "Cancelled."; return }
+                $index = 0
+                if (-not [int]::TryParse($pick, [ref] $index) -or $index -lt 1 -or $index -gt $candidates.Count) {
+                    Write-Host "  '$pick' is not a valid choice; try again."
+                    continue
+                }
+                $candidateStem = Get-TestStem $candidates[$index - 1].BaseName
+                $dest = Join-Path $testsDir "test_$candidateStem.py"
+                if (Test-Path $dest) {
+                    Write-Host "  A test already exists for that file (tests\test_$candidateStem.py); pick another."
+                    continue
+                }
+                $stem = $candidateStem
+            }
+        }
+    }
+
+    if (-not $stem) {
+        Write-Host ""
+        Write-Host "Note: 'test_' is prepended to the name, e.g. 'foo' -> test_foo.py."
+        while (-not $stem) {
+            $raw = Read-Host "Name for the new test"
+            $candidateStem = Get-TestStem $raw
+            if (-not $candidateStem) { Write-Host "  Please enter a valid name."; continue }
+            $dest = Join-Path $testsDir "test_$candidateStem.py"
+            if (Test-Path $dest) {
+                Write-Host "  test_$candidateStem.py already exists; choose a different name."
+                continue
+            }
+            $stem = $candidateStem
+        }
+    }
+}
+
+if (-not (Test-Path $testsDir)) { New-Item -ItemType Directory -Path $testsDir | Out-Null }
 
 # Write UTF-8 without BOM to match the rest of the repo.
+$content = Get-TestTemplate
 [System.IO.File]::WriteAllText($dest, $content, (New-Object System.Text.UTF8Encoding($false)))
 
+Write-Host ""
 Write-Host "Created tests/test_$stem.py"
 Write-Host "Next:  edit tests/test_$stem.py and write the tests."

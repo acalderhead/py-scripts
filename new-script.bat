@@ -1,9 +1,7 @@
 @echo off
-REM Double-click launcher for new-script.ps1: prompts for a name, then scaffolds
-REM a new script into scripts\. Runs PowerShell with the execution policy
-REM bypassed for this one process, and pauses so you can read the result.
-setlocal
-set /p "name=Name for the new script: "
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0new-script.ps1" -Name "%name%"
+REM Double-click launcher for new-script.ps1: runs it interactively (prompts for
+REM a name, re-prompts on a collision), bypassing the execution policy for this
+REM one process, and pauses so you can read the result.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0new-script.ps1"
 echo.
 pause
