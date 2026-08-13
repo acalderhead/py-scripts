@@ -8,13 +8,13 @@
     plus the dev tools (pytest, ruff). These venvs are header-neutral: they power
     IntelliSense, linting, and tests, and back the venv "(stdlib)" debug configs.
     Running and header-aware (RichLogger) debugging both go through `uv run`,
-    which reads each script's PEP 723 header — so RichLogger appears exactly when
+    which reads each script's PEP 723 header -- so RichLogger appears exactly when
     a script pins the `[rich]` extra, independent of these venvs.
 
 .PARAMETER Tag
-    scriptkit release tag to install into each venv (default: v0.4.0). This also
-    determines the default pin used by `scriptkit new` when scaffolding from a
-    dev venv, since it pins the scriptkit version it runs as.
+    scriptkit release tag to install into each venv (default: v1.0.0). This sets
+    what the editor, lint, and tests resolve against; it does not change what a
+    script runs -- `uv run` honors each script's own PEP 723 pin.
 
 .PARAMETER Force
     Delete and recreate venvs that already exist.
@@ -25,7 +25,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Tag = "v0.4.0",
+    [string]$Tag = "v1.0.0",
     [switch]$Force
 )
 
@@ -34,7 +34,7 @@ $ErrorActionPreference = "Stop"
 # Run uv and fail only on a non-zero exit code. Two Windows PowerShell quirks
 # are handled here:
 #   1. A plain $args splat (not a declared parameter) so uv flags like -e pass
-#      straight through — an advanced function would try to bind -e to a common
+#      straight through -- an advanced function would try to bind -e to a common
 #      parameter (-ErrorAction/-ErrorVariable) and error out as ambiguous.
 #   2. `2>&1 | ForEach-Object { "$_" }` funnels uv's stderr progress (e.g. "All
 #      requested versions already installed") into the output stream as plain
@@ -58,7 +58,7 @@ $versions = "3.11", "3.12", "3.13"
 # resolved per-script by `uv run` reading the PEP 723 header, not from here.
 $scriptkit = "scriptkit @ git+https://github.com/acalderhead/py-scriptkit.git@$Tag"
 # Dev tooling for the lint / test tasks (kept in sync with scriptkit's own dev
-# extras). These are editor/CI tools only — never a runtime dependency of a
+# extras). These are editor/CI tools only -- never a runtime dependency of a
 # script, which pins what it needs in its own PEP 723 header.
 $devTools = "pytest>=8", "ruff>=0.6"
 

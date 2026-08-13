@@ -1,8 +1,10 @@
 # tests/
 
-Optional tests for the scripts in `../scripts`. Standard `pytest` layout.
+Optional tests for the scripts in `../scripts`, in the standard `pytest` layout.
+Most one-off utilities will not need any; add them for anything with logic worth
+protecting as the scripts and the library evolve.
 
-`conftest.py` adds `../scripts` to `sys.path`, so a test imports a script by its
+`conftest.py` puts `../scripts` on `sys.path`, so a test imports a script by its
 module name and calls its functions directly:
 
 ```python
@@ -15,14 +17,12 @@ def test_settings_defaults(tmp_path):
 
 ## Running
 
-Tests need `scriptkit` available in the active interpreter. Use one of the dev
-venvs from `setup-venvs.ps1` (see the root README for one-time setup), then:
+A test needs `scriptkit` in the active interpreter, so run from one of the dev
+venvs `setup-venvs.ps1` builds (the root README covers one-time setup):
 
 ```powershell
 .\.venv313\Scripts\python.exe -m pytest -q
 ```
 
-Or press the Testing beaker in VS Code (already wired in `.vscode/settings.json`).
-
-Testing scripts is optional — many one-off utilities won't need it. Add tests
-for anything with logic worth protecting as the library and scripts evolve.
+The VS Code Testing beaker works too; it is already wired in
+`.vscode/settings.json`.

@@ -14,7 +14,7 @@
     test_reconcile.py). Omit for the interactive flow.
 
 .PARAMETER Tag
-    scriptkit release tag for the GitHub-raw template fallback (default: v0.5.4).
+    scriptkit release tag for the GitHub-raw template fallback (default: v1.0.0).
 
 .PARAMETER Force
     Overwrite an existing file (honored only with -Name).
@@ -27,7 +27,7 @@
 param(
     [Parameter(Position = 0)]
     [string]$Name,
-    [string]$Tag = "v0.5.4",
+    [string]$Tag = "v1.0.0",
     [switch]$Force
 )
 

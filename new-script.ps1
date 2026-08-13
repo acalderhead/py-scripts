@@ -14,7 +14,7 @@
     reconcile_invoices.py). Omit for the interactive prompt.
 
 .PARAMETER Tag
-    scriptkit release tag to pin the new script to (default: v0.5.4).
+    scriptkit release tag to pin the new script to (default: v1.0.0).
 
 .PARAMETER Force
     Overwrite an existing file (honored only with -Name).
@@ -28,7 +28,7 @@
 param(
     [Parameter(Position = 0)]
     [string]$Name,
-    [string]$Tag = "v0.5.4",
+    [string]$Tag = "v1.0.0",
     [switch]$Force
 )
 
